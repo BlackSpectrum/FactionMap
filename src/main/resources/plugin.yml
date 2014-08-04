@@ -1,0 +1,5 @@
+name: ${project.name}
+main: ${project.groupId}.factionmap.FactionMap
+version: ${project.version}
+author: Mats391
+depend: [Factions]
