@@ -48,6 +48,7 @@ public class Board
 			MapView fMap = Bukkit.createMap( oldMap.getWorld() );
 			fMap.setCenterX( oldMap.getCenterX() );
 			fMap.setCenterZ( oldMap.getCenterZ() );
+			fMap.setScale( oldMap.getScale() );
 			
 			fMaps.put( map,  fMap.getId() );
 	}}
