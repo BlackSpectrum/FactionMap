@@ -3,18 +3,28 @@ package eu.blackspectrum.factionmap;
 import java.util.Collection;
 import java.util.HashMap;
 
-import org.bukkit.Bukkit;
-import org.bukkit.map.MapView;
-
 import eu.blackspectrum.factionmap.entities.FMap;
 
 public class FMaps
 {
 
 
-	private HashMap<Short, FMap>	fMaps	= new HashMap<Short, FMap>();
+	private final HashMap<Short, FMap>	fMaps	= new HashMap<Short, FMap>();
 
-	private static FMaps			instance;
+	private final long GARBAGE_COLLECT_TIME = 300;
+	
+	private static FMaps				instance;
+
+
+
+
+	//Singleton
+	public static FMaps Instance() {
+		if ( instance == null )
+			instance = new FMaps();
+
+		return instance;
+	}
 
 
 
@@ -26,33 +36,48 @@ public class FMaps
 
 
 
-	public static FMaps Instance() {
-		if ( instance == null )
-			instance = new FMaps();
-
-		
-		
-		return instance;
-	}
-
-	
-	public void addFMap(short id, MapView map)
-	{
-		fMaps.put( id, new FMap( id, map ) );
+	public void addFMap( final short id ) {
+		this.fMaps.put( id, new FMap( id ) );
 	}
 
 
-	@SuppressWarnings("deprecation")
-	public FMap getFMap( short id ) {
-		if ( !fMaps.containsKey( id ) )
-			fMaps.put( id, new FMap( id, Bukkit.getMap( id ) ) );
 
-		return fMaps.get( id );
+
+	// Dump and remove those that didnt get used for some time
+	public void collectGarbage() {
+		final long now = System.currentTimeMillis();
+		for ( final FMap fMap : this.fMaps.values() )
+			if ( now - fMap.getLastUsed() - GARBAGE_COLLECT_TIME * 1000 >= 0 )
+			{
+				fMap.dump();
+
+				this.fMaps.remove( fMap.getId() );
+			}
 	}
-	
-	public Collection<FMap> getFMaps()
-	{
-		return fMaps.values();
+
+
+
+	// Dump everything, but do not remove
+	public void dump() {
+		for ( final FMap fMap : this.fMaps.values() )
+			fMap.dump();
+	}
+
+
+
+
+	public FMap getFMap( final short id ) {
+		if ( !this.fMaps.containsKey( id ) )
+			this.fMaps.put( id, new FMap( id ) );
+
+		return this.fMaps.get( id );
+	}
+
+
+
+
+	public Collection<FMap> getFMaps() {
+		return this.fMaps.values();
 	}
 
 }

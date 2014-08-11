@@ -1,5 +1,7 @@
 package eu.blackspectrum.factionmap;
 
+import java.lang.ref.WeakReference;
+
 import org.bukkit.World.Environment;
 import org.bukkit.entity.Player;
 import org.bukkit.map.MapCanvas;
@@ -9,6 +11,7 @@ import org.bukkit.map.MapView;
 
 import com.massivecraft.factions.entity.BoardColls;
 import com.massivecraft.factions.entity.Faction;
+import com.massivecraft.factions.entity.FactionColls;
 import com.massivecraft.massivecore.ps.PS;
 
 import eu.blackspectrum.factionmap.entities.FMap;
@@ -17,44 +20,51 @@ public class FMapRenderer extends MapRenderer
 {
 
 
-	private final FMap	fMap;
+	// WeakReference for garbage collecting
+	private WeakReference<FMap>	fMapRef			= new WeakReference<FMap>( null );
 
-	private final int	VIEW_DISTANCE	= 8;
+	
+	// Maximum view distance on the map in chunks
+	private final int			VIEW_DISTANCE	= 8;
 
 
 
 
-	public FMapRenderer(final FMap fMap) {
+	public FMapRenderer() {
 		super( true );
-		this.fMap = fMap;
-
 	}
 
 
 
 
+	@SuppressWarnings("deprecation")
 	@Override
 	public void render( final MapView map, final MapCanvas canvas, final Player player ) {
-		
-		//Remove cursors
+		FMap fMap = fMapRef.get();
+
+		// Did the fMap get thrown to garbage?
+		if ( fMap == null )
+		{
+			fMapRef = new WeakReference<FMap>( FMaps.Instance().getFMap( map.getId() ) );
+			fMap = fMapRef.get();
+		}
+
+		// Remove cursors
 		final MapCursorCollection cursors = canvas.getCursors();
 
 		while ( cursors.size() > 0 )
 			cursors.removeCursor( cursors.getCursor( 0 ) );
 
-		fMap.initialize();
-		
-
 		// Render current data
 		for ( int x = 0; x < 128; x++ )
 			for ( int y = 0; y < 128; y++ )
-				canvas.setPixel( x, y, this.fMap.getPixel( x, y, player ) );
+				canvas.setPixel( x, y, fMap.getPixel( x, y, player ) );
 
 		// Is he holding map and is in same world?
 		if ( player.getItemInHand().getDurability() != fMap.getId() || !player.getWorld().equals( map.getWorld() ) )
 			return;
 
-		// Get Faction colours
+
 		final int scaleMod = map.getScale().ordinal();
 		// Faction territory discovering
 		{
@@ -80,12 +90,12 @@ public class FMapRenderer extends MapRenderer
 						for ( int zi = z; zi < z + step; zi++ )
 							if ( ( xi - playerMapX ) * ( xi - playerMapX ) + ( zi - playerMapZ ) * ( zi - playerMapZ ) <= this.VIEW_DISTANCE
 									* this.VIEW_DISTANCE * step * step )
-								this.fMap.setPixel( xi, zi, cachedColour );
+								fMap.setPixel( xi, zi, cachedColour );
 				}
 		}
 
 		// Draw cursors if not end/nether
-		if(map.getWorld().getEnvironment().equals( Environment.NORMAL ))
+		if ( map.getWorld().getEnvironment().equals( Environment.NORMAL ) )
 		{
 			final int xDiff = player.getLocation().getBlockX() - map.getCenterX() >> scaleMod;
 			final int zDiff = player.getLocation().getBlockZ() - map.getCenterZ() >> scaleMod;
@@ -103,6 +113,28 @@ public class FMapRenderer extends MapRenderer
 				// Add cursor with proper direction
 				cursors.addCursor( cursorX, cursorZ, direction );
 			}
+			else
+			{
+				// only is he still renders stuff on the map draw his cursor
+				if ( Math.abs( xDiff ) >= 63 + ( VIEW_DISTANCE * ( 16 >> scaleMod ) )
+						|| Math.abs( zDiff ) >= 63 + ( VIEW_DISTANCE * ( 16 >> scaleMod ) ) )
+					return;
+
+				if ( xDiff <= -63 )
+					cursorX = (byte) 128;
+
+				if ( zDiff <= -63 )
+					cursorZ = (byte) 128;
+
+				if ( xDiff >= 63 )
+					cursorX = (byte) 127;
+
+				if ( zDiff >= 63 )
+					cursorZ = (byte) 127;
+
+				// Add cursor ass dot
+				cursors.addCursor( cursorX, cursorZ, direction, (byte) 6 );
+			}
 		}
 	}
 
@@ -113,12 +145,18 @@ public class FMapRenderer extends MapRenderer
 		final Faction faction = BoardColls.get().getFactionAt( PS.valueOf( world, chunkX, chunkZ ) );
 
 		if ( faction == null )
-			return 4;
+			return 4;	//green
 
 		if ( faction.isNone() )
-			return 4;
-		else
-			return 58;
+			return 4;	//green
+
+		if ( faction.equals( FactionColls.get().getForWorld( world ).getSafezone() ) )
+			return 72;	//Gold
+
+		if ( faction.equals( FactionColls.get().getForWorld( world ).getWarzone() ) )
+			return (byte) 142;	//dark red
+
+		return 58;
 
 	}
 }

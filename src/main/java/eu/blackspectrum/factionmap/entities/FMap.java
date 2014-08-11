@@ -15,18 +15,15 @@ import net.minecraft.server.v1_7_R4.MinecraftServer;
 import net.minecraft.server.v1_7_R4.WorldMap;
 
 import org.bukkit.entity.Player;
-import org.bukkit.map.MapRenderer;
-import org.bukkit.map.MapView;
 
-import eu.blackspectrum.factionmap.FMapRenderer;
 import eu.blackspectrum.factionmap.FactionMap;
 
 public class FMap
 {
 
 
-	private Set<UUID>		factionModePlayers	= new HashSet<UUID>();
-	private byte[]			pixels;
+	private final Set<UUID>	factionModePlayers	= new HashSet<UUID>();
+	private final byte[]	pixels;
 	private final short		id;
 	private final WorldMap	map;
 	private long			lastUsed;
@@ -34,141 +31,22 @@ public class FMap
 
 
 
-	public FMap(short id, MapView mapView) {
-		this.id = id;
-		pixels = null;
+	//read compressed pixels from disc
+	public static byte[] read( final short id ) {
+		final byte[] data = new byte[128 * 128];
 
-		lastUsed = 0;
-
-		map = (WorldMap) MinecraftServer.getServer().worlds.get( 0 ).worldMaps.get( WorldMap.class, "map_" + id );
-
-		for ( MapRenderer render : mapView.getRenderers() )
-			mapView.removeRenderer( render );
-
-		mapView.addRenderer( new FMapRenderer( this ) );
-	}
-
-
-
-
-	public void setLastUsed( long lastUsed ) {
-		this.lastUsed = lastUsed;
-	}
-
-
-
-
-	public boolean shouldDeinitialize() {
-		return System.currentTimeMillis() - lastUsed - 300 >= 0;
-	}
-
-
-
-
-	public void deinitialize() {
-		if ( pixels != null )
-		{
-			write( id, pixels );
-			pixels = null;
-		}
-	}
-
-
-
-
-	public void initialize() {
-		if ( pixels == null )
-			pixels = read( id );
-	}
-
-
-
-
-	public void togglePlayer( UUID uid ) {
-
-		if ( factionModePlayers.contains( uid ) )
-		{
-			factionModePlayers.remove( uid );
-		}
-		else
-		{
-			factionModePlayers.add( uid );
-		}
-	}
-
-
-
-
-	public void removePlayer( UUID uid ) {
-		factionModePlayers.remove( uid );
-	}
-
-
-
-
-	public Collection<UUID> getPlayers() {
-		return factionModePlayers;
-	}
-
-
-
-
-	public void setPixel( int x, int y, byte value ) {
-		if ( x >= 0 && x < 128 && y >= 0 && y < 128 )
-		{
-			pixels[x + 128 * y] = value;
-		}
-	}
-
-
-
-
-	public byte getPixel( int x, int y, Player player ) {
-		if ( x >= 0 && x < 128 && y >= 0 && y < 128 )
-			if ( isFactionModeForPlayer( player ) )
-				return pixels[x + 128 * y];
-			else
-			{
-				return map.colors[x + 128 * y];
-			}
-		else
-		{
-			return 0;
-		}
-	}
-
-
-
-
-	public boolean isFactionModeForPlayer( Player player ) {
-		return factionModePlayers.contains( player.getUniqueId() );
-	}
-
-
-
-
-	public short getId() {
-		return id;
-	}
-
-
-
-
-	public static byte[] read( short id ) {
-		byte[] data = new byte[128 * 128];
-
-		File file = new File( "plugins" + File.separator + FactionMap.pluginName + File.separator + "maps" + File.separator + "map_" + id
-				+ ".dat" );
+		final File file = new File( "plugins" + File.separator + FactionMap.pluginName + File.separator + "maps" + File.separator + "map_"
+				+ id + ".dat" );
 
 		if ( !file.exists() )
 			return data;
 
 		try
 		{
-			FileInputStream fis = new FileInputStream( file );
-			GZIPInputStream gis = new GZIPInputStream( fis );
+			final FileInputStream fis = new FileInputStream( file );
+			final GZIPInputStream gis = new GZIPInputStream( fis );
 
-			byte[] buffer = new byte[1024];
+			final byte[] buffer = new byte[1024];
 			int len;
 			int pos = 0;
 			while ( ( len = gis.read( buffer ) ) != -1 )
@@ -180,7 +58,7 @@ public class FMap
 
 			gis.close();
 		}
-		catch ( IOException e )
+		catch ( final IOException e )
 		{
 			e.printStackTrace();
 		}
@@ -189,18 +67,18 @@ public class FMap
 
 
 
-
-	public static void write( short id, byte[] data ) {
-		File file = new File( "plugins" + File.separator + FactionMap.pluginName + File.separator + "maps" + File.separator + "map_" + id
-				+ ".dat" );
+	//write pixels to disc with gzip
+	public static void write( final short id, final byte[] data ) {
+		final File file = new File( "plugins" + File.separator + FactionMap.pluginName + File.separator + "maps" + File.separator + "map_"
+				+ id + ".dat" );
 
 		try
 		{
 			if ( !file.exists() )
 				file.createNewFile();
 
-			FileOutputStream fos = new FileOutputStream( file );
-			GZIPOutputStream gzipOS = new GZIPOutputStream( fos );
+			final FileOutputStream fos = new FileOutputStream( file );
+			final GZIPOutputStream gzipOS = new GZIPOutputStream( fos );
 
 			gzipOS.write( data );
 
@@ -208,9 +86,106 @@ public class FMap
 			gzipOS.close();
 			fos.close();
 		}
-		catch ( IOException e )
+		catch ( final IOException e )
 		{
 			e.printStackTrace();
 		}
+	}
+
+
+
+
+	public FMap(final short id) {
+		this.id = id;
+		this.pixels = read( id );
+		
+
+		this.lastUsed = 0;
+
+		// get the normal map
+		this.map = (WorldMap) MinecraftServer.getServer().worlds.get( 0 ).worldMaps.get( WorldMap.class, "map_" + id );
+
+	}
+
+
+
+	//dump to disc
+	public void dump() {
+		if ( this.pixels != null )
+			write( this.id, this.pixels );
+	}
+
+
+
+
+	public short getId() {
+		return this.id;
+	}
+
+
+
+
+	public long getLastUsed() {
+		return this.lastUsed;
+	}
+
+
+
+
+	public byte getPixel( final int x, final int y, final Player player ) {
+		if ( x >= 0 && x < 128 && y >= 0 && y < 128 )
+			if ( this.isFactionModeForPlayer( player ) )
+				return this.pixels[x + 128 * y];
+			else
+				return this.map.colors[x + 128 * y];
+		else
+			return 0;
+	}
+
+
+
+
+	public Collection<UUID> getPlayers() {
+		return this.factionModePlayers;
+	}
+
+
+
+
+	public boolean isFactionModeForPlayer( final Player player ) {
+		return this.factionModePlayers.contains( player.getUniqueId() );
+	}
+
+
+
+
+	public void removePlayer( final UUID uid ) {
+		this.factionModePlayers.remove( uid );
+	}
+
+
+
+
+	public void setLastUsed( final long lastUsed ) {
+		this.lastUsed = lastUsed;
+	}
+
+
+
+
+	public void setPixel( final int x, final int y, final byte value ) {
+		if ( x >= 0 && x < 128 && y >= 0 && y < 128 )
+			this.pixels[x + 128 * y] = value;
+	}
+
+
+
+
+	public void togglePlayer( final UUID uid ) {
+
+		if ( this.factionModePlayers.contains( uid ) )
+			this.factionModePlayers.remove( uid );
+		else
+			this.factionModePlayers.add( uid );
 	}
 }

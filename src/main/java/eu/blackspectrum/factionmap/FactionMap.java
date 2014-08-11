@@ -6,10 +6,11 @@ import java.io.FileInputStream;
 import java.io.IOException;
 
 import org.bukkit.Bukkit;
+import org.bukkit.craftbukkit.v1_7_R4.map.CraftMapRenderer;
+import org.bukkit.map.MapRenderer;
 import org.bukkit.map.MapView;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import eu.blackspectrum.factionmap.entities.FMap;
 import eu.blackspectrum.factionmap.listeners.PlayerListener;
 
 public class FactionMap extends JavaPlugin
@@ -21,26 +22,36 @@ public class FactionMap extends JavaPlugin
 
 
 
+	@Override
+	public void onDisable() {
+		// First collect garbage, then dump all remaining maps
+		FMaps.Instance().collectGarbage();
+		FMaps.Instance().dump();
+	}
+
+
+
+
+	@Override
 	@SuppressWarnings("deprecation")
 	public void onEnable() {
 
 		if ( pluginName == null )
-			pluginName = getName();
+			pluginName = this.getName();
 
-		getServer().getPluginManager().registerEvents( new PlayerListener(), this );
-		
-		 new File( "plugins" + File.separator + pluginName + File.separator + "maps" ).mkdirs();
+		this.getServer().getPluginManager().registerEvents( new PlayerListener(), this );
+
+		new File( "plugins" + File.separator + pluginName + File.separator + "maps" ).mkdirs();
 
 		// Initialize all maps with FMaps
-
 		short lastedMap = -1;
 
 		try
 		{
-			lastedMap = readLatestId();
+			lastedMap = this.readLatestId();
 
 		}
-		catch ( IOException e )
+		catch ( final IOException e )
 		{
 			e.printStackTrace();
 		}
@@ -50,26 +61,41 @@ public class FactionMap extends JavaPlugin
 
 		for ( short id = 0; id <= lastedMap; id++ )
 		{
-			MapView map = Bukkit.getMap( id );
+			final MapView map = Bukkit.getMap( id );
 			if ( map != null )
-				FMaps.Instance().addFMap( id, map );
+			{
+				// Throw away all default map renderer
+				for ( final MapRenderer rend : map.getRenderers() )
+					if ( rend instanceof CraftMapRenderer )
+						map.removeRenderer( rend );
+
+				// If no renderer left add FMapRenderer
+				if ( map.getRenderers().size() == 0 )
+					map.addRenderer( new FMapRenderer() );
+
+			}
 		}
+
+		// Schedule garbage collection
+		this.getServer().getScheduler().scheduleAsyncRepeatingTask( this, new Runnable() {
+
+
+			@Override
+			public void run() {
+				FMaps.Instance().collectGarbage();
+
+			}
+		}, 6000, 6000 );
 	}
-	
-	public void onDisable(){
-		for(FMap map : FMaps.Instance().getFMaps())
-		{
-			map.deinitialize();
-		}
-	}
 
 
 
 
+	// Read latest mapId from idcounts.dat
 	private short readLatestId() throws IOException {
-		File f = new File( "world" + File.separator + "data" + File.separator + "idcounts.dat" );
+		final File f = new File( "world" + File.separator + "data" + File.separator + "idcounts.dat" );
 
-		DataInputStream dis = new DataInputStream( new FileInputStream( f ) );
+		final DataInputStream dis = new DataInputStream( new FileInputStream( f ) );
 		try
 		{
 
@@ -80,7 +106,7 @@ public class FactionMap extends JavaPlugin
 			dis.readUTF();
 			return dis.readShort();
 		}
-		catch ( IOException e )
+		catch ( final IOException e )
 		{
 			e.printStackTrace();
 		}
