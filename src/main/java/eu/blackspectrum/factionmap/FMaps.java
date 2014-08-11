@@ -9,16 +9,16 @@ public class FMaps
 {
 
 
-	private final HashMap<Short, FMap>	fMaps	= new HashMap<Short, FMap>();
+	private final HashMap<Short, FMap>	fMaps					= new HashMap<Short, FMap>();
 
-	private final long GARBAGE_COLLECT_TIME = 300;
-	
+	private final long					GARBAGE_COLLECT_TIME	= 300;
+
 	private static FMaps				instance;
 
 
 
 
-	//Singleton
+	// Singleton
 	public static FMaps Instance() {
 		if ( instance == null )
 			instance = new FMaps();
@@ -47,13 +47,14 @@ public class FMaps
 	public void collectGarbage() {
 		final long now = System.currentTimeMillis();
 		for ( final FMap fMap : this.fMaps.values() )
-			if ( now - fMap.getLastUsed() - GARBAGE_COLLECT_TIME * 1000 >= 0 )
+			if ( now - fMap.getLastUsed() - this.GARBAGE_COLLECT_TIME * 1000 >= 0 )
 			{
 				fMap.dump();
 
 				this.fMaps.remove( fMap.getId() );
 			}
 	}
+
 
 
 

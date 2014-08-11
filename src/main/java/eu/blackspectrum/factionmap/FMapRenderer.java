@@ -23,7 +23,6 @@ public class FMapRenderer extends MapRenderer
 	// WeakReference for garbage collecting
 	private WeakReference<FMap>	fMapRef			= new WeakReference<FMap>( null );
 
-	
 	// Maximum view distance on the map in chunks
 	private final int			VIEW_DISTANCE	= 8;
 
@@ -40,13 +39,13 @@ public class FMapRenderer extends MapRenderer
 	@SuppressWarnings("deprecation")
 	@Override
 	public void render( final MapView map, final MapCanvas canvas, final Player player ) {
-		FMap fMap = fMapRef.get();
+		FMap fMap = this.fMapRef.get();
 
 		// Did the fMap get thrown to garbage?
 		if ( fMap == null )
 		{
-			fMapRef = new WeakReference<FMap>( FMaps.Instance().getFMap( map.getId() ) );
-			fMap = fMapRef.get();
+			this.fMapRef = new WeakReference<FMap>( FMaps.Instance().getFMap( map.getId() ) );
+			fMap = this.fMapRef.get();
 		}
 
 		// Remove cursors
@@ -63,7 +62,6 @@ public class FMapRenderer extends MapRenderer
 		// Is he holding map and is in same world?
 		if ( player.getItemInHand().getDurability() != fMap.getId() || !player.getWorld().equals( map.getWorld() ) )
 			return;
-
 
 		final int scaleMod = map.getScale().ordinal();
 		// Faction territory discovering
@@ -104,7 +102,7 @@ public class FMapRenderer extends MapRenderer
 			byte cursorZ = (byte) ( zDiff << 1 );
 
 			byte direction = 0;
-			float yaw = player.getLocation().getYaw();
+			final float yaw = player.getLocation().getYaw();
 
 			if ( xDiff >= -63 && zDiff >= -63 && xDiff <= 63 && zDiff <= 63 )
 			{
@@ -116,8 +114,8 @@ public class FMapRenderer extends MapRenderer
 			else
 			{
 				// only is he still renders stuff on the map draw his cursor
-				if ( Math.abs( xDiff ) >= 63 + ( VIEW_DISTANCE * ( 16 >> scaleMod ) )
-						|| Math.abs( zDiff ) >= 63 + ( VIEW_DISTANCE * ( 16 >> scaleMod ) ) )
+				if ( Math.abs( xDiff ) >= 63 + this.VIEW_DISTANCE * ( 16 >> scaleMod )
+						|| Math.abs( zDiff ) >= 63 + this.VIEW_DISTANCE * ( 16 >> scaleMod ) )
 					return;
 
 				if ( xDiff <= -63 )
@@ -145,16 +143,16 @@ public class FMapRenderer extends MapRenderer
 		final Faction faction = BoardColls.get().getFactionAt( PS.valueOf( world, chunkX, chunkZ ) );
 
 		if ( faction == null )
-			return 4;	//green
+			return 4; // green
 
 		if ( faction.isNone() )
-			return 4;	//green
+			return 4; // green
 
 		if ( faction.equals( FactionColls.get().getForWorld( world ).getSafezone() ) )
-			return 72;	//Gold
+			return 72; // Gold
 
 		if ( faction.equals( FactionColls.get().getForWorld( world ).getWarzone() ) )
-			return (byte) 142;	//dark red
+			return (byte) 142; // dark red
 
 		return 58;
 

@@ -31,7 +31,7 @@ public class FMap
 
 
 
-	//read compressed pixels from disc
+	// read compressed pixels from disc
 	public static byte[] read( final short id ) {
 		final byte[] data = new byte[128 * 128];
 
@@ -67,7 +67,8 @@ public class FMap
 
 
 
-	//write pixels to disc with gzip
+
+	// write pixels to disc with gzip
 	public static void write( final short id, final byte[] data ) {
 		final File file = new File( "plugins" + File.separator + FactionMap.pluginName + File.separator + "maps" + File.separator + "map_"
 				+ id + ".dat" );
@@ -98,7 +99,6 @@ public class FMap
 	public FMap(final short id) {
 		this.id = id;
 		this.pixels = read( id );
-		
 
 		this.lastUsed = 0;
 
@@ -109,7 +109,8 @@ public class FMap
 
 
 
-	//dump to disc
+
+	// dump to disc
 	public void dump() {
 		if ( this.pixels != null )
 			write( this.id, this.pixels );
