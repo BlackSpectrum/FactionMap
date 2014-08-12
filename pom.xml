@@ -4,7 +4,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>eu.blackspectrum</groupId>
 	<artifactId>FactionMap</artifactId>
-	<version>RC-0.1</version>
+	<version>1.0</version>
 	<name>FactionMap</name>
 	<url>http://blackspectrum.eu/</url>
 	<build>

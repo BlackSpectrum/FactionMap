@@ -98,12 +98,17 @@ public class FactionMap extends JavaPlugin
 		final DataInputStream dis = new DataInputStream( new FileInputStream( f ) );
 		try
 		{
-
+			// Read first tag
 			dis.readByte();
+			// Read first tag-name
 			dis.readUTF();
 
+			// Read second tag
 			dis.readByte();
+			// Read second tag name
 			dis.readUTF();
+
+			// Read short
 			return dis.readShort();
 		}
 		catch ( final IOException e )

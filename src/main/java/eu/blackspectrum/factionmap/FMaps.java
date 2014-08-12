@@ -2,6 +2,7 @@ package eu.blackspectrum.factionmap;
 
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 
 import eu.blackspectrum.factionmap.entities.FMap;
 
@@ -46,13 +47,18 @@ public class FMaps
 	// Dump and remove those that didnt get used for some time
 	public void collectGarbage() {
 		final long now = System.currentTimeMillis();
-		for ( final FMap fMap : this.fMaps.values() )
-			if ( now - fMap.getLastUsed() - this.GARBAGE_COLLECT_TIME * 1000 >= 0 )
-			{
-				fMap.dump();
+		final Iterator<FMap> it = this.fMaps.values().iterator();
 
-				this.fMaps.remove( fMap.getId() );
+		while ( it.hasNext() )
+		{
+			final FMap map = it.next();
+
+			if ( now - map.getLastUsed() - this.GARBAGE_COLLECT_TIME * 1000 >= 0 )
+			{
+				map.dump();
+				it.remove();
 			}
+		}
 	}
 
 

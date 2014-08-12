@@ -45,7 +45,7 @@ public class PlayerListener implements Listener
 
 		if ( !event.getAction().equals( Action.RIGHT_CLICK_AIR ) && !event.getAction().equals( Action.RIGHT_CLICK_BLOCK ) )
 			return;
-
+		
 		final ItemStack item = event.getPlayer().getItemInHand();
 
 		if ( item != null && item.getType().equals( Material.MAP ) )

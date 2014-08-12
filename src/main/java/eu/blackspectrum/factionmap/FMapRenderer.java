@@ -55,9 +55,10 @@ public class FMapRenderer extends MapRenderer
 			cursors.removeCursor( cursors.getCursor( 0 ) );
 
 		// Render current data
-		for ( int x = 0; x < 128; x++ )
-			for ( int y = 0; y < 128; y++ )
-				canvas.setPixel( x, y, fMap.getPixel( x, y, player ) );
+		if ( fMap.isFactionModeForPlayer( player ) )
+			fMap.renderFactions( canvas );
+		else
+			fMap.renderTerrain( canvas );
 
 		// Is he holding map and is in same world?
 		if ( player.getItemInHand().getDurability() != fMap.getId() || !player.getWorld().equals( map.getWorld() ) )
