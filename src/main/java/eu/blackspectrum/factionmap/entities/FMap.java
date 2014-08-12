@@ -6,7 +6,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -30,6 +29,7 @@ public class FMap
 	private final short		id;
 	private final WorldMap	map;
 	private long			lastUsed;
+	private boolean			dumped;				;
 
 
 
@@ -177,7 +177,9 @@ public class FMap
 
 		this.factionModePlayers = readPlayers( id );
 
-		this.lastUsed = 0;
+		this.lastUsed = System.currentTimeMillis();
+
+		this.dumped = false;
 
 		// get the normal map
 		this.map = (WorldMap) MinecraftServer.getServer().worlds.get( 0 ).worldMaps.get( WorldMap.class, "map_" + id );
@@ -191,6 +193,7 @@ public class FMap
 	public void dump() {
 		writeData( this.id, this.pixels );
 		writePlayers( this.id, this.factionModePlayers );
+		this.dumped = true;
 	}
 
 
@@ -210,8 +213,8 @@ public class FMap
 
 
 
-	public Collection<UUID> getPlayers() {
-		return this.factionModePlayers;
+	public boolean isDumped() {
+		return this.dumped;
 	}
 
 
@@ -219,13 +222,6 @@ public class FMap
 
 	public boolean isFactionModeForPlayer( final Player player ) {
 		return this.factionModePlayers.contains( player.getUniqueId() );
-	}
-
-
-
-
-	public void removePlayer( final UUID uid ) {
-		this.factionModePlayers.remove( uid );
 	}
 
 
@@ -265,7 +261,6 @@ public class FMap
 
 
 	public void togglePlayer( final UUID uid ) {
-
 		if ( this.factionModePlayers.contains( uid ) )
 			this.factionModePlayers.remove( uid );
 		else

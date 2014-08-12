@@ -4,8 +4,8 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>eu.blackspectrum</groupId>
 	<artifactId>FactionMap</artifactId>
-	<version>1.0</version>
-	<name>FactionMap</name>
+	<version>1.0.1</version>
+	<name>BSPFactionMap</name>
 	<url>http://blackspectrum.eu/</url>
 	<build>
 		<resources>

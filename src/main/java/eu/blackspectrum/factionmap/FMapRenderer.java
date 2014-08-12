@@ -42,11 +42,13 @@ public class FMapRenderer extends MapRenderer
 		FMap fMap = this.fMapRef.get();
 
 		// Did the fMap get thrown to garbage?
-		if ( fMap == null )
+		if ( fMap == null || fMap.isDumped() )
 		{
 			this.fMapRef = new WeakReference<FMap>( FMaps.Instance().getFMap( map.getId() ) );
 			fMap = this.fMapRef.get();
 		}
+
+		fMap.setLastUsed( System.currentTimeMillis() );
 
 		// Remove cursors
 		final MapCursorCollection cursors = canvas.getCursors();
