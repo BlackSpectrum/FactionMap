@@ -81,8 +81,10 @@ public class FMapRenderer extends MapRenderer
 			final int playerMapZ = player.getLocation().getBlockZ() - topLeftZ >> scaleMod;
 
 			// Minimum value needs to be rounded to multiple of step
-			for ( int x = ( playerMapX - this.VIEW_DISTANCE * step ) / step * step; x <= playerMapX + this.VIEW_DISTANCE * step; x += step )
-				for ( int z = ( playerMapZ - this.VIEW_DISTANCE * step ) / step * step; z <= playerMapZ + this.VIEW_DISTANCE * step; z += step )
+			for ( int x = Math.max( ( playerMapX - this.VIEW_DISTANCE * step ) / step * step, 0 ); x <= Math.min( playerMapX
+					+ this.VIEW_DISTANCE * step, 127 ); x += step )
+				for ( int z = Math.max( ( playerMapZ - this.VIEW_DISTANCE * step ) / step * step, 0 ); z <= Math.min( playerMapZ
+						+ this.VIEW_DISTANCE * step, 127 ); z += step )
 				{
 					// Convert current pixel to world chunk coordinates
 					final byte cachedColour = this.getColour( topLeftX + ( x << scaleMod ) >> 4, topLeftZ + ( z << scaleMod ) >> 4,
