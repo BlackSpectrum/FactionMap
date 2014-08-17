@@ -43,12 +43,12 @@ public class PlayerListener implements Listener
 	@EventHandler(priority = EventPriority.NORMAL)
 	public void onPlayerRightClickMap( final PlayerInteractEvent event ) {
 
-		if ( !event.getAction().equals( Action.RIGHT_CLICK_AIR ) && !event.getAction().equals( Action.RIGHT_CLICK_BLOCK ) )
+		if ( event.getAction() != Action.RIGHT_CLICK_AIR && event.getAction() != Action.RIGHT_CLICK_BLOCK )
 			return;
 
 		final ItemStack item = event.getPlayer().getItemInHand();
 
-		if ( item != null && item.getType().equals( Material.MAP ) )
+		if ( item != null && item.getType() == Material.MAP )
 			FMaps.Instance().getFMap( item.getDurability() ).togglePlayer( event.getPlayer().getUniqueId() );
 	}
 

@@ -43,7 +43,21 @@ public class FactionMap extends JavaPlugin
 
 		new File( "plugins" + File.separator + pluginName + File.separator + "maps" ).mkdirs();
 
+		// Schedule garbage collection
+		// *********************************************************
+		this.getServer().getScheduler().scheduleAsyncRepeatingTask( this, new Runnable() {
+
+
+			@Override
+			public void run() {
+				FMaps.Instance().collectGarbage();
+
+			}
+		}, 6000, 6000 );
+		// *********************************************************
+
 		// Initialize all maps with FMaps
+		// *********************************************************
 		short lastedMap = -1;
 
 		try
@@ -75,17 +89,8 @@ public class FactionMap extends JavaPlugin
 
 			}
 		}
+		// *********************************************************
 
-		// Schedule garbage collection
-		this.getServer().getScheduler().scheduleAsyncRepeatingTask( this, new Runnable() {
-
-
-			@Override
-			public void run() {
-				FMaps.Instance().collectGarbage();
-
-			}
-		}, 6000, 6000 );
 	}
 
 
@@ -94,6 +99,9 @@ public class FactionMap extends JavaPlugin
 	// Read latest mapId from idcounts.dat
 	private short readLatestId() throws IOException {
 		final File f = new File( "world" + File.separator + "data" + File.separator + "idcounts.dat" );
+
+		if ( !f.exists() )
+			return -1;
 
 		final DataInputStream dis = new DataInputStream( new FileInputStream( f ) );
 		try
